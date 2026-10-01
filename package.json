@@ -22,15 +22,16 @@
     "pack:dir": "npm run prepare-assets && node scripts/pack.js --dir"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "devDependencies": {
-    "electron": "^33.0.0",
-    "electron-builder": "^25.1.8"
+    "electron": "33.4.11",
+    "electron-builder": "25.1.8"
   },
   "build": {
     "appId": "com.dafengshu.accelerator",
     "productName": "大枫树加速",
+    "electronVersion": "33.4.11",
     "directories": {
       "output": "dist"
     },
