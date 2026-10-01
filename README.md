@@ -1,5 +1,7 @@
 # 大枫树加速
 
+**简体中文** · [English](README.en.md)
+
 面向 Windows 的 **Twitter / X 加速客户端**：图形界面 + 规则引擎，内置 [sing-box](https://sing-box.sagernet.org/) 内核完成实际转发。
 
 ```

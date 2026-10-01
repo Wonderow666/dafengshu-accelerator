@@ -1,0 +1,96 @@
+name: Build Windows Installer
+
+# 自动构建 Windows 安装包
+# - 推送到 main：构建并上传为 workflow artifact（可供下载，不发布 Release）
+# - 推送 v* 标签：构建并自动创建/更新 GitHub Release
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch: # 允许手动触发
+
+permissions:
+  contents: write # 发布 Release 需要
+
+jobs:
+  build-windows:
+    name: Build (windows / x64)
+    runs-on: windows-latest
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 运行单元测试
+        run: node --test test/core.test.js
+
+      - name: 创建资源目录
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path resources/bin | Out-Null
+          New-Item -ItemType Directory -Force -Path resources/ruleset | Out-Null
+
+      - name: 下载 sing-box 内核
+        shell: pwsh
+        run: |
+          # 内核二进制体积大，不入库，构建时下载
+          node scripts/fetch-singbox.js v1.11.15
+
+      - name: 下载国内分流规则集
+        shell: pwsh
+        run: |
+          # 用于国内直连判定，失败不阻塞构建（客户端运行时也会自动补齐）
+          try {
+            node scripts/prepare-rulesets.js
+          } catch {
+            Write-Warning "规则集下载失败，跳过：$_"
+          }
+
+      - name: 生成应用图标
+        shell: pwsh
+        run: node scripts/make-icons.js
+
+      - name: 打包（免安装目录 + NSIS 安装包）
+        shell: pwsh
+        env:
+          # 国内网络访问 GitHub 构件不稳定时可换镜像（国际网络下也可用）
+          ELECTRON_MIRROR: https://npmmirror.com/mirrors/electron/
+          ELECTRON_BUILDER_BINARIES_MIRROR: https://npmmirror.com/mirrors/electron-builder-binaries/
+          # 用 ASCII 输出名，避免中文路径在 CI 上出编码问题
+          DAFENGSHU_OUTPUT_DIR: release-build
+          DAFENGSHU_ARTIFACT_NAME: dafengshu-accelerator-${version}-setup.exe
+        run: npm run pack
+
+      - name: 列出构建产物
+        shell: pwsh
+        run: Get-ChildItem release-build -ErrorAction SilentlyContinue | Select-Object Name, @{n='MB';e={[math]::Round($_.Length/1MB,1)}} | Format-Table -AutoSize
+
+      - name: 上传构建产物（artifact）
+        uses: actions/upload-artifact@v4
+        with:
+          name: dafengshu-accelerator-windows-x64
+          path: |
+            release-build/*.exe
+            release-build/*.blockmap
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: 发布到 GitHub Release（仅标签推送时）
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ github.ref_name }}" `
+            --title "大枫树加速 ${{ github.ref_name }}" `
+            --notes "自动构建的 Windows 安装包。内核与国内分流规则集已随包内置，首次运行无需联网下载。" `
+            release-build/*.exe `
+            || gh release upload "${{ github.ref_name }}" release-build/*.exe --clobber
