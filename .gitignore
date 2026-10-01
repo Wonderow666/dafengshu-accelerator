@@ -1,0 +1,29 @@
+node_modules/
+dist/
+release/
+data/
+*.log
+.DS_Store
+Thumbs.db
+
+# 内核二进制体积大（33MB），不入库 —— 用 npm run fetch:core 获取
+resources/bin/
+
+# 打包中间产物
+*.bak
+
+# 内置的国内分流规则集（约 88KB，随仓库保留可让首次运行完全离线可用）
+# 用 npm run rulesets 可重新生成；如果你不希望入库，取消下面这行的注释
+# resources/ruleset/
+
+# 本地临时文件
+*.tmp
+*.7z
+
+# APK / 安装包等大二进制，不入库
+*.apk
+*.apks
+*.exe
+*.msi
+*.dmg
+*.zip

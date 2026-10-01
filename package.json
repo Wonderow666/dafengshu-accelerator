@@ -1,0 +1,79 @@
+{
+  "name": "dafengshu-accelerator",
+  "productName": "大枫树加速",
+  "version": "0.1.0",
+  "private": true,
+  "description": "面向 Windows 的 Twitter/X 网络加速客户端（Electron + sing-box）",
+  "main": "src/main/main.js",
+  "author": "大枫树加速",
+  "license": "MIT",
+  "scripts": {
+    "fetch:core": "node scripts/fetch-singbox.js",
+    "icons": "node scripts/make-icons.js",
+    "rulesets": "node scripts/prepare-rulesets.js",
+    "start": "electron .",
+    "cli": "node bin/dfsj.js",
+    "check": "node bin/dfsj.js check",
+    "test": "node --test test/core.test.js",
+    "smoke": "node scripts/smoke.js",
+    "verify": "node scripts/runtime-check.js",
+    "prepare-assets": "node scripts/make-icons.js && node scripts/fetch-singbox.js && node scripts/prepare-rulesets.js",
+    "pack": "npm run prepare-assets && node scripts/pack.js",
+    "pack:dir": "npm run prepare-assets && node scripts/pack.js --dir"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.dafengshu.accelerator",
+    "productName": "大枫树加速",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/bin",
+        "to": "bin",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "resources/ruleset",
+        "to": "ruleset",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "resources/icons",
+        "to": "icons",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "win": {
+      "icon": "resources/icons/icon.png",
+      "target": [
+        "nsis"
+      ],
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": false,
+      "artifactName": "大枫树加速-${version}-安装包.exe",
+      "shortcutName": "大枫树加速"
+    }
+  }
+}

@@ -1,0 +1,13 @@
+# 统一换行符，避免 Windows/macOS/Linux 协作时满屏 "LF will be replaced by CRLF"
+* text=auto eol=lf
+
+# 二进制文件不做换行转换
+*.png binary
+*.ico binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.srs binary
+*.exe binary
+*.apk binary
+*.zip binary

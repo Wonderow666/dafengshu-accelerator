@@ -1,0 +1,226 @@
+{
+  "log": {
+    "level": "warn",
+    "timestamp": true
+  },
+  "dns": {
+    "servers": [
+      {
+        "type": "udp",
+        "tag": "dns-local",
+        "server": "223.5.5.5"
+      },
+      {
+        "type": "https",
+        "tag": "dns-remote",
+        "server": "1.1.1.1",
+        "domain_resolver": "dns-local"
+      }
+    ],
+    "rules": [
+      {
+        "domain_suffix": [
+          "x.com",
+          "twitter.com",
+          "t.co",
+          "twimg.com",
+          "twttr.com",
+          "twttr.net",
+          "twitterstat.us",
+          "ads-twitter.com",
+          "twitter.biz",
+          "pscp.tv",
+          "periscope.tv",
+          "periscope.co",
+          "challenges.cloudflare.com",
+          "client-api.arkoselabs.com",
+          "arkoselabs.com",
+          "funcaptcha.com",
+          "accounts.google.com",
+          "gstatic.com",
+          "googleusercontent.com",
+          "recaptcha.net"
+        ],
+        "action": "route",
+        "server": "dns-remote"
+      },
+      {
+        "domain_suffix": [
+          "cn",
+          "qq.com",
+          "baidu.com",
+          "bilibili.com",
+          "taobao.com",
+          "jd.com",
+          "aliyun.com",
+          "weibo.com",
+          "zhihu.com",
+          "163.com",
+          "sohu.com",
+          "iqiyi.com",
+          "youku.com",
+          "meituan.com",
+          "xiaohongshu.com"
+        ],
+        "action": "route",
+        "server": "dns-local"
+      },
+      {
+        "domain_keyword": [
+          "localhost",
+          "msftconnecttest.com",
+          "msftncsi.com",
+          "apple.com",
+          "icloud.com"
+        ],
+        "action": "route",
+        "server": "dns-local"
+      }
+    ],
+    "final": "dns-remote",
+    "strategy": "prefer_ipv4"
+  },
+  "inbounds": [
+    {
+      "type": "tun",
+      "tag": "tun-in",
+      "interface_name": "sing-box",
+      "address": ["172.19.0.1/30"],
+      "mtu": 1500,
+      "auto_route": true,
+      "strict_route": false
+    }
+  ],
+  "outbounds": [
+    {
+      "type": "selector",
+      "tag": "proxy",
+      "outbounds": ["首尔-VLESS-8443", "首尔-VLESS-22", "首尔-Hysteria2"],
+      "default": "首尔-VLESS-8443"
+    },
+    {
+      "type": "vless",
+      "tag": "首尔-VLESS-8443",
+      "server": "141.164.53.6",
+      "server_port": 8443,
+      "uuid": "0450cedb-497a-40c1-93d7-9c2381691957",
+      "tls": {
+        "enabled": true,
+        "server_name": "www.apple.com",
+        "reality": {
+          "enabled": true,
+          "public_key": "F4LRkWX9QLTCtaiaGXNLptVEM6DqujcN9OG_VMpYaGc",
+          "short_id": "ea64d752ddcd0b34"
+        },
+        "utls": {
+          "enabled": true,
+          "fingerprint": "chrome"
+        }
+      }
+    },
+    {
+      "type": "hysteria2",
+      "tag": "首尔-Hysteria2",
+      "server": "141.164.53.6",
+      "server_port": 8443,
+      "password": "UpviPvRKZq0qDH6Ztxqr",
+      "tls": {
+        "enabled": true,
+        "server_name": "bing.com",
+        "insecure": true,
+        "alpn": ["h3"]
+      }
+    },
+    {
+      "type": "vless",
+      "tag": "首尔-VLESS-22",
+      "server": "141.164.53.6",
+      "server_port": 22,
+      "uuid": "0450cedb-497a-40c1-93d7-9c2381691957",
+      "tls": {
+        "enabled": true,
+        "server_name": "www.apple.com",
+        "reality": {
+          "enabled": true,
+          "public_key": "F4LRkWX9QLTCtaiaGXNLptVEM6DqujcN9OG_VMpYaGc",
+          "short_id": "ea64d752ddcd0b34"
+        },
+        "utls": {
+          "enabled": true,
+          "fingerprint": "chrome"
+        }
+      }
+    },
+    {
+      "type": "direct",
+      "tag": "direct"
+    }
+  ],
+  "route": {
+    "rules": [
+      {
+        "action": "sniff"
+      },
+      {
+        "domain_suffix": [
+          "x.com",
+          "twitter.com",
+          "t.co",
+          "twimg.com",
+          "twttr.com",
+          "twttr.net",
+          "twitterstat.us",
+          "ads-twitter.com",
+          "twitter.biz",
+          "pscp.tv",
+          "periscope.tv",
+          "periscope.co",
+          "challenges.cloudflare.com",
+          "client-api.arkoselabs.com",
+          "arkoselabs.com",
+          "funcaptcha.com",
+          "accounts.google.com",
+          "gstatic.com",
+          "googleusercontent.com",
+          "recaptcha.net"
+        ],
+        "action": "route",
+        "outbound": "proxy"
+      },
+      {
+        "ip_is_private": true,
+        "action": "route",
+        "outbound": "direct"
+      },
+      {
+        "domain_keyword": ["localhost", "msftconnecttest.com", "msftncsi.com"],
+        "action": "route",
+        "outbound": "direct"
+      },
+      {
+        "domain_suffix": [
+          "cn",
+          "qq.com",
+          "baidu.com",
+          "bilibili.com",
+          "taobao.com",
+          "jd.com",
+          "aliyun.com",
+          "weibo.com",
+          "zhihu.com",
+          "163.com",
+          "sohu.com",
+          "iqiyi.com",
+          "youku.com",
+          "meituan.com",
+          "xiaohongshu.com"
+        ],
+        "action": "route",
+        "outbound": "direct"
+      }
+    ],
+    "final": "proxy",
+    "auto_detect_interface": true,
+    "default_domain_resolver": "dns-local"
+  }
+}

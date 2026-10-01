@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'" />
+    <title>大枫树加速</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="titlebar">
+      <div class="brand">
+        <span class="logo">枫</span>
+        <div>
+          <div class="brand-name">大枫树加速</div>
+          <div class="brand-sub" id="brandSub">正在初始化…</div>
+        </div>
+      </div>
+      <div class="titlebar-right">
+        <span class="chip" id="chipAdmin" title="TUN 模式需要管理员权限">权限检测中</span>
+        <span class="chip" id="chipKernel" title="sing-box 内核">内核检测中</span>
+        <button class="icon-btn" id="btnMinimize" title="最小化">–</button>
+        <button class="icon-btn" id="btnClose" title="关闭到托盘">✕</button>
+      </div>
+    </header>
+
+    <nav class="tabs">
+      <button class="tab active" data-tab="home">加速</button>
+      <button class="tab" data-tab="nodes">节点</button>
+      <button class="tab" data-tab="subs">订阅</button>
+      <button class="tab" data-tab="routing">分流</button>
+      <button class="tab" data-tab="logs">日志</button>
+      <button class="tab" data-tab="about">关于</button>
+    </nav>
+
+    <main>
+      <!-- ── 加速 ─────────────────────────────────────────────── -->
+      <section class="panel active" id="panel-home">
+        <div class="hero">
+          <button class="power" id="btnPower">
+            <span class="power-icon">⏻</span>
+            <span class="power-text" id="powerText">启动加速</span>
+          </button>
+          <div class="hero-status">
+            <div class="status-line" id="statusLine">已停止</div>
+            <div class="status-sub" id="statusSub">选择节点后点击上方按钮开始加速</div>
+            <div class="status-meta" id="statusMeta"></div>
+          </div>
+        </div>
+
+        <div class="quick-grid">
+          <label class="switch-card">
+            <input type="checkbox" id="swTun" />
+            <div>
+              <div class="switch-title">TUN 全局模式</div>
+              <div class="switch-desc">接管全部程序流量（含 Twitter 客户端），需要管理员权限</div>
+            </div>
+          </label>
+          <label class="switch-card">
+            <input type="checkbox" id="swSysProxy" />
+            <div>
+              <div class="switch-title">系统代理</div>
+              <div class="switch-desc">只影响浏览器等读取系统代理的程序，无需管理员权限</div>
+            </div>
+          </label>
+          <label class="switch-card">
+            <input type="checkbox" id="swAllowLan" />
+            <div>
+              <div class="switch-title">局域网共享</div>
+              <div class="switch-desc">让手机/平板用本机 IP + 端口一起走代理（需与电脑同一 WiFi）</div>
+            </div>
+          </label>
+        </div>
+
+        <div class="card" id="lanCard" hidden>
+          <div class="card-title">手机代理设置</div>
+          <div class="kv-grid" id="lanInfo"></div>
+          <div class="hint" style="margin-top: 10px">
+            手机 →「设置 → WLAN → 当前网络 → 代理 → 手动」，填入上面的主机名和端口。
+          </div>
+        </div>
+
+        <div class="card row-between">
+          <div>
+            <div class="card-title">当前节点</div>
+            <div class="card-value" id="currentNode">未选择</div>
+          </div>
+          <div class="btn-row">
+            <button class="btn" id="btnTestAll">全部测速</button>
+            <button class="btn primary" id="btnCheckTwitter">检测 X 可达性</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">分流概览</div>
+          <div class="kv-grid" id="routingSummary">
+            <div class="kv"><span>规则</span><b>未启动</b></div>
+          </div>
+        </div>
+
+        <div class="card" id="progressCard" hidden>
+          <div class="card-title">正在下载内核</div>
+          <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+          <div class="progress-text" id="progressText"></div>
+        </div>
+      </section>
+
+      <!-- ── 节点 ─────────────────────────────────────────────── -->
+      <section class="panel" id="panel-nodes">
+        <div class="card">
+          <div class="card-title">添加节点</div>
+          <textarea
+            id="nodeInput"
+            class="input-area"
+            rows="3"
+            placeholder="粘贴分享链接，每行一个。支持 vless / vmess / trojan / ss / hysteria2 / tuic / socks"
+          ></textarea>
+          <div class="btn-row">
+            <button class="btn primary" id="btnImportNodes">导入节点</button>
+            <button class="btn" id="btnClearInput">清空</button>
+            <span class="hint" id="importHint"></span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title row-between">
+            <span>节点列表 <span class="muted" id="nodeCount"></span></span>
+            <span class="btn-row">
+              <button class="btn" id="btnRefreshList">刷新</button>
+              <button class="btn" id="btnTestAll2">全部测速</button>
+            </span>
+          </div>
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th style="width: 40px"></th>
+                  <th>名称</th>
+                  <th style="width: 90px">协议</th>
+                  <th>服务器</th>
+                  <th style="width: 90px">延迟</th>
+                  <th style="width: 130px">操作</th>
+                </tr>
+              </thead>
+              <tbody id="nodeTable"></tbody>
+            </table>
+          </div>
+          <div class="empty" id="nodeEmpty">还没有节点。展开一个订阅，或直接粘贴分享链接。</div>
+        </div>
+      </section>
+
+      <!-- ── 订阅 ─────────────────────────────────────────────── -->
+      <section class="panel" id="panel-subs">
+        <div class="card">
+          <div class="card-title">导入订阅</div>
+          <div class="input-row">
+            <input class="input" id="subInput" placeholder="https://example.com/api/v1/client/subscribe?token=..." />
+            <button class="btn primary" id="btnAddSub">添加并更新</button>
+          </div>
+          <div class="hint">
+            支持 Clash / mihomo、base64 链接列表、通用订阅。首次拉取可能需要几十秒。
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title row-between">
+            <span>已配置订阅</span>
+            <button class="btn" id="btnRefreshSubs">全部更新</button>
+          </div>
+          <div id="subList" class="sub-list"></div>
+          <div class="empty" id="subEmpty">还没有订阅。</div>
+        </div>
+      </section>
+
+      <!-- ── 分流 ─────────────────────────────────────────────── -->
+      <section class="panel" id="panel-routing">
+        <div class="card">
+          <div class="card-title">加速哪些服务（这些域名强制走代理）</div>
+          <div class="cat-grid" id="catGrid"></div>
+          <div class="card-title" style="margin-top: 16px">额外域名后缀</div>
+          <textarea
+            id="customSuffixes"
+            class="input-area"
+            rows="3"
+            placeholder="每行一个，例如：\nexample.com\n*.myapp.io"
+          ></textarea>
+          <div class="btn-row">
+            <button class="btn primary" id="btnSaveRouting">保存</button>
+            <span class="hint">Twitter / X 默认已勾选，且优先级最高</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">国内直连与其它选项</div>
+          <label class="switch-row"><input type="checkbox" id="swBypassChina" /> <span>国内网站直连（不被代理绕远路，保证国内访问速度）</span></label>
+          <label class="switch-row"><input type="checkbox" id="swBlockAds" /> <span>拦截广告与统计域名</span></label>
+          <label class="switch-row">
+            <span>国内域名/IP 判定数据源</span>
+            <select class="input select" id="selGeoSource">
+              <option value="auto">自动（优先本地规则集，失败回退内置库）</option>
+              <option value="ruleset">只用规则集文件</option>
+              <option value="legacy">只用内核内置 geo 库</option>
+              <option value="suffix">只用软件内置域名表</option>
+            </select>
+          </label>
+          <label class="switch-row">
+            <span>未匹配流量走向</span>
+            <select class="input select" id="selFinal">
+              <option value="proxy">走代理</option>
+              <option value="direct">直连</option>
+            </select>
+          </label>
+          <div class="btn-row">
+            <button class="btn primary" id="btnSaveRoute">保存</button>
+            <span class="hint">修改后如果正在加速，会自动重启内核使其生效</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">网络与 DNS</div>
+          <div class="kv-form">
+            <label>本地代理端口 <input class="input" id="inboundPort" type="number" min="1024" max="65535" /></label>
+            <label>Clash API 端口 <input class="input" id="clashApiPort" type="number" min="1024" max="65535" /></label>
+            <label>国内 DNS <input class="input" id="dnsLocal" /></label>
+            <label>加密 DNS（防污染）<input class="input" id="dnsRemote" /></label>
+          </div>
+          <div class="btn-row">
+            <button class="btn primary" id="btnSaveNet">保存</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── 日志 ─────────────────────────────────────────────── -->
+      <section class="panel" id="panel-logs">
+        <div class="card">
+          <div class="card-title row-between">
+            <span>运行日志</span>
+            <span class="btn-row">
+              <button class="btn" id="btnRefreshLogs">刷新</button>
+              <button class="btn" id="btnClearLogs">清空内核日志</button>
+              <button class="btn" id="btnOpenLogDir">打开日志目录</button>
+            </span>
+          </div>
+          <pre class="log" id="logBox"></pre>
+        </div>
+      </section>
+
+      <!-- ── 关于 ─────────────────────────────────────────────── -->
+      <section class="panel" id="panel-about">
+        <div class="card">
+          <div class="card-title">运行环境</div>
+          <div class="kv-grid" id="aboutInfo"></div>
+          <div class="btn-row">
+            <button class="btn" id="btnInstallKernel">重新下载内核</button>
+            <button class="btn" id="btnOpenDataDir">打开数据目录</button>
+            <button class="btn" id="btnPreviewConfig">查看生成的配置</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">配置预览</div>
+          <pre class="log small" id="configBox">点击「查看生成的配置」</pre>
+        </div>
+        <div class="card">
+          <div class="card-title">工作原理</div>
+          <p class="para">
+            本程序是图形界面 + 规则引擎，内置 <b>sing-box</b> 内核完成实际的网络转发。加速所需的
+            <b>服务端线路需要你自己准备</b>（自建 VPS 或机场订阅），软件本身不提供线路。
+          </p>
+          <p class="para">
+            分流顺序：广告拦截 → 加速域名（Twitter/X 等，强制走代理，DNS 用加密通道解析防污染）→
+            内网直连 → 国内域名/IP 直连 → 其余走代理。
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="statusbar">
+      <span id="statusbarText">就绪</span>
+      <span id="statusbarRight" class="muted"></span>
+    </footer>
+
+    <script src="app.js"></script>
+  </body>
+</html>
